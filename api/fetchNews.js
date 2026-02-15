@@ -45,9 +45,18 @@ export default async function handler(req, res) {
         const results = await Promise.all(feedPromises);
         results.forEach(articles => allArticles.push(...articles));
 
+        // Better shuffle algorithm (Fisher-Yates)
+        function shuffle(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
         // Shuffle and get the first 20 articles
-        const shuffled = allArticles
-            .sort(() => 0.5 - Math.random())
+        const shuffled = shuffle(allArticles)
             .slice(0, 20)
             .map(article => ({
                 ...article,
@@ -104,14 +113,18 @@ function parseRSS(xmlString, source, emoji) {
         if (title && title.length > 10) {
             // Clean HTML entities
             const cleanTitle = decodeHTMLEntities(title);
+            const cleanDescription = decodeHTMLEntities(description);
             
-            articles.push({
-                title: cleanTitle.substring(0, 150), // Limit to 150 chars
-                source: source,
-                date: pubDate,
-                emoji: emoji,
-                explanation: description.substring(0, 200) || 'Article d\'actualité vérifiée'
-            });
+            // Filter out English articles
+            if (isFrench(cleanTitle)) {
+                articles.push({
+                    title: cleanTitle.substring(0, 150), // Limit to 150 chars
+                    source: source,
+                    date: pubDate,
+                    emoji: emoji,
+                    explanation: cleanDescription.substring(0, 200) || 'Article d\'actualité vérifiée'
+                });
+            }
         }
     });
 
@@ -119,17 +132,33 @@ function parseRSS(xmlString, source, emoji) {
 }
 
 /**
- * Decode HTML entities
+ * Decode HTML entities properly
  */
 function decodeHTMLEntities(text) {
-    return text
+    if (!text) return '';
+    const textArea = { innerHTML: '' };
+    textArea.innerHTML = text
         .replace(/&amp;/g, '&')
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"')
         .replace(/&#39;/g, "'")
         .replace(/&#x([0-9A-Fa-f]+);/g, (match, hex) => String.fromCharCode(parseInt(hex, 16)))
-        .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(parseInt(dec, 10)));
+        .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(parseInt(dec, 10)))
+        .replace(/<[^>]*>/g, '')
+        .replace(/\s+/g, ' ');
+    return textArea.innerHTML || text;
+}
+
+/**
+ * Simple language detection - returns true if likely French
+ */
+function isFrench(text) {
+    if (!text) return false;
+    const frenchWords = ['les', 'des', 'est', 'que', 'pour', 'avec', 'dans', 'sur', 'une', 'un', 'se', 'qui', 'ce', 'pas', 'ont', 'été', 'très', 'deux', 'entre', 'nous', 'france', 'paris', 'français'];
+    const lowerText = text.toLowerCase();
+    const matches = frenchWords.filter(w => lowerText.includes(w)).length;
+    return matches >= 3; // At least 3 French words
 }
 
 /**

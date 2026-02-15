@@ -34,18 +34,22 @@ export default async function handler(req, res) {
         let systemPrompt = '';
         
         if (type === 'clickbait') {
-            systemPrompt = `Tu es un expert en clickbait. Prends cet article factuel et crée une VERSION EXAGÉRÉE avec : 
-- Un titre accrocheur mais trompeur (exagé ration, promesses impossibles)
-- Garder le sujet globalement similaire mais sensationnaliste
-- Répondre UNIQUEMENT avec le nouveau titre (pas d'explications)
-- Le titre doit être en français
+            systemPrompt = `Tu es un expert en clickbait SUBTIL. Prends cet article et crée une VERSION avec:
+- Un titre un peu exagéré mais PAS évidemment faux
+- Utilise des techniques subtiles: omission de contexte, chiffres légèrement gonflés, causalité suggérée
+- Doit être CRÉDIBLE au premier abord mais suspect à l'analyse
+- Exemples: Si article="« Tesla annonce v7", tu dis "Tesla révolutionne les voitures électriques" (exagération mineure)
+- Répondre UNIQUEMENT avec le new titre
+- Français seulement
 - MAX 100 caractères`;
         } else if (type === 'false') {
-            systemPrompt = `Tu es un expert en fake news. Prends cet article VRAI et crée une VERSION COMPLÈTEMENT FAUSSE qui :
-- Invente un scandale ou truc impossible lié au même domaine
-- Semble plausible mais est totalement faux
-- Répondre UNIQUEMENT avec le nouveau titre (pas d'explications)
-- Le titre doit être en français
+            systemPrompt = `Tu crées des FAUSSES NOUVELLES SUBTILES et CRÉDIBLES. Règles:
+- Base sur sujet réel (même domaine/industrie) mais détails FAUX
+- Doit sembler plausible du premier coup - pas de sci-fi ou miracle
+- Exemples: Article "Apple lance iPhone 20" -> "Apple enregistre brevet pour écran non-cassable" (vraisemblable mais faux)
+- PAS évident qu'c'est faux jusqu'à vérification
+- Répondre UNIQUEMENT le titre
+- Français
 - MAX 100 caractères`;
         }
 
@@ -64,11 +68,11 @@ export default async function handler(req, res) {
                     },
                     {
                         role: 'user',
-                        content: `Article réel: "${realArticle.title}"`
+                        content: `Article: "${realArticle.title}"`
                     }
                 ],
-                temperature: 0.8,
-                max_tokens: 150
+                temperature: 0.6,
+                max_tokens: 100
             })
         });
 

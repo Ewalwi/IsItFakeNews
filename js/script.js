@@ -360,7 +360,10 @@ async function generateAllArticles() {
         const clickbaitNews = await Promise.all(clickbaitPromises);
 
         gameState.articles = [...realNews, ...fakeNews, ...clickbaitNews].filter(a => a !== null);
-        shuffleArray(gameState.articles);
+        // Better shuffle to avoid clustering same types
+        for (let i = 0; i < 3; i++) {
+            shuffleArray(gameState.articles);
+        }
         gameState.totalQuestions = gameState.articles.length;
 
         console.log(`Total articles ready: ${gameState.articles.length}`);
