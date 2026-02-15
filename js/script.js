@@ -1,8 +1,7 @@
 // ========================================
 // API Configuration
 // ========================================
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const GROQ_API_URL = process.env.GROQ_API_URL;
+const API_ENDPOINT = '/api/groq';
 
 // ========================================
 // Static Articles (fallback et exemples concrets)
@@ -163,10 +162,9 @@ const DOM = {
 // ========================================
 async function callGroqAPI(messages, options = {}) {
     try {
-        const response = await fetch(GROQ_API_URL, {
+        const response = await fetch(API_ENDPOINT, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${GROQ_API_KEY}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
