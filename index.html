@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IS IT FAKE NEWS? 📰</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Baloo+2:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Decorative blobs -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+    <div class="blob blob-4"></div>
+    <div class="blob blob-5"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1 class="logo">🔍 Fake News Detector</h1>
+            <p class="tagline">Peux-tu repérer le mensonge ?</p>
+        </header>
+
+        <!-- Start Screen -->
+        <div class="content-box start-screen" id="start-screen">
+            <div class="article-container">
+                <h2 class="article-title">🔥 Défi : Repère le Mensonge 🔥</h2>
+                <p class="explanation">
+                    Les fake news t'attendent ! Peux-tu les identifier avant qu'elles ne te trompent ? 
+                    <br><br>
+                    <strong>✓ Vrai sujet ?</strong> Identifie les vraies infos<br>
+                    <strong>⚠ Clickbait ?</strong> Repère les titres exagérés<br>
+                    <strong>✗ Complètement faux ?</strong> Dénonce les mensonges<br>
+                    <br>
+                    Teste ton esprit critique et deviens un MAÎTRE DE L'INFO ! 🎯
+                </p>
+                <button class="next-btn" id="start-game-btn">🚀 C'EST PARTI →</button>
+            </div>
+        </div>
+
+        <!-- Score Display -->
+        <div class="score-container" id="score-container">
+            <div class="score-box">
+                <span class="score-label">Score</span>
+                <span class="score-value" id="score">0</span>
+            </div>
+            <div class="score-box">
+                <span class="score-label">Question</span>
+                <span class="score-value" id="current-question">1</span>
+            </div>
+            <div class="score-box">
+                <span class="score-label">Série</span>
+                <span class="score-value" id="streak">0</span>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-container hidden" id="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+            <span class="progress-text" id="progress-text">Question 0/10</span>
+        </div>
+
+        <!-- Game Container -->
+        <div id="game-container" class="hidden">
+            <!-- Question Card -->
+            <div class="content-box question-container" id="question-card">
+                <div class="content-header">
+                    <span class="question-number">Question <span id="q-num">1</span>/10</span>
+                    <span>Analyse bien !</span>
+                </div>
+                <div class="article-container">
+                    <div class="article-image" id="article-img">
+                        📰
+                    </div>
+                    <div class="article-source">
+                        <span id="source-name">TechActualités</span>
+                        <span id="article-date">15 fév 2026</span>
+                    </div>
+                    <h2 class="article-title" id="article-title">
+                        Une IA devient PDG d'une startup française et licencie tous les humains
+                    </h2>
+
+                    <div class="buttons-container">
+                        <button class="choice-btn btn-true" onclick="checkAnswer('true')">
+                            <span class="icon">✓</span>
+                            <span>Vrai article</span>
+                        </button>
+                        <button class="choice-btn btn-clickbait" onclick="checkAnswer('clickbait')">
+                            <span class="icon">⚠</span>
+                            <span>Titre trompeur (clickbait)</span>
+                        </button>
+                        <button class="choice-btn btn-false" onclick="checkAnswer('false')">
+                            <span class="icon">✗</span>
+                            <span>Totalement faux</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Container -->
+            <div class="content-box result-container" id="result-card">
+                <div class="content-header">
+                    <span>Résultat</span>
+                </div>
+                <div class="article-container result-details">
+                    <h2 class="result-outcome" id="result-outcome">Bravo !</h2>
+                    <div class="summary-boxes">
+                        <div class="summary-box">
+                            <span class="summary-label">Ta réponse</span>
+                            <span class="summary-value" id="player-answer"></span>
+                        </div>
+                        <div class="summary-box">
+                            <span class="summary-label">Bonne réponse</span>
+                            <span class="summary-value" id="correct-answer"></span>
+                        </div>
+                        <div class="summary-box">
+                            <span class="summary-label">Précision</span>
+                            <span class="summary-value" id="accuracy-info"></span>
+                        </div>
+                    </div>
+                    <div class="explanation" id="explanation-text">
+                        Explication ici...
+                    </div>
+                    <div class="points-awarded" id="points-awarded">+ 10 pts</div>
+                    <button class="next-btn" onclick="nextQuestion()">Question suivante →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- End Game Container -->
+        <div class="content-box endgame-container" id="endgame-card">
+            <div class="content-header">
+                <span>Fin de partie !</span>
+            </div>
+            <div class="article-container">
+                <div class="final-score" id="final-score">80/100</div>
+                <div class="badge" id="badge-icon">🧠</div>
+                <h2 class="badge-title" id="badge-title">Analyste confirmé</h2>
+                <div class="explanation" id="endgame-description">
+                    Tu as un bon instinct pour détecter la désinformation ! Continue d'affiner ton esprit critique.
+                </div>
+                <div class="button-group">
+                    <button class="share-btn" onclick="shareScore()">� PARTAGER & DÉFIER MES AMIS 🔥</button>
+                    <button class="restart-btn" onclick="restartGame()">🔄 Rejouer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</div>
+<!-- Toast Notifications -->
+<div id="toast-container"></div>
+</body>
+</html>
