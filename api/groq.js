@@ -16,7 +16,7 @@ export default async function handler(req, res) {
 
     const { messages, model, temperature, max_tokens, response_format } = req.body;
     const GROQ_API_KEY = process.env.GROQ_API_KEY;
-    const GROQ_API_URL = process.env.GROQ_API_URL || 'https://api.groq.com/openai/v1/chat/completions';
+    const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
     if (!GROQ_API_KEY) {
         console.error('GROQ_API_KEY not configured');
