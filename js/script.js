@@ -116,6 +116,7 @@ const STATIC_CLICKBAIT = [
 // ========================================
 let gameState = {
     articles: [],
+    usedRealArticles: new Set(), // Track used articles to avoid dupes
     currentQuestionIndex: 0,
     score: 0,
     streak: 0,
@@ -217,10 +218,15 @@ async function generateEmojiWithGroq(title) {
 
 async function generateArticleWithGroq(type = 'false', baseArticle = null) {
     try {
-        // If no base article, pick a random real one
+        // If no base article, pick a random unused real one
         if (!baseArticle && gameState.articles && gameState.articles.length > 0) {
             const realArticles = gameState.articles.filter(a => a.type === 'true');
-            if (realArticles.length > 0) {
+            const unusedArticles = realArticles.filter(a => !gameState.usedRealArticles.has(a.title));
+            
+            if (unusedArticles.length > 0) {
+                baseArticle = unusedArticles[Math.floor(Math.random() * unusedArticles.length)];
+            } else if (realArticles.length > 0) {
+                // If all used, pick any (recycling)
                 baseArticle = realArticles[Math.floor(Math.random() * realArticles.length)];
             }
         }
@@ -229,6 +235,9 @@ async function generateArticleWithGroq(type = 'false', baseArticle = null) {
         if (!baseArticle) {
             return getStaticFallback(type);
         }
+
+        // Track this article as used
+        gameState.usedRealArticles.add(baseArticle.title);
 
         // Call the new API to generate fake/clickbait based on real article
         const response = await fetch('/api/generateContent', {
@@ -249,6 +258,9 @@ async function generateArticleWithGroq(type = 'false', baseArticle = null) {
         const date = formatDate(new Date());
         const source = type === 'false' ? 'InfoDélire' : 'BuzzActu';
         
+        // Clean quotes from title
+        const cleanedTitle = (data.generatedTitle || 'Titre non généré').replace(/"/g, '');
+        
         let explanation;
         if (type === 'false') {
             explanation = `Cette information est complètement inventée basée sur le sujet réel: "${baseArticle.title}". Aucune source fiable ne rapporte cet événement.`;
@@ -257,7 +269,7 @@ async function generateArticleWithGroq(type = 'false', baseArticle = null) {
         }
 
         return {
-            title: data.generatedTitle || 'Titre non généré',
+            title: cleanedTitle,
             source: source,
             date: date,
             icon: '❓',
@@ -276,6 +288,7 @@ function getStaticFallback(type) {
     const article = pool[Math.floor(Math.random() * pool.length)];
     return {
         ...article,
+        title: article.title.replace(/"/g, ''), // Remove quotes
         date: formatDate(new Date()),
         icon: article.emoji
     };
@@ -299,7 +312,7 @@ async function getRealNews() {
         const selected = realArticles.slice(0, 4);
         
         const articles = selected.map((item) => ({
-            title: item.title,
+            title: item.title.replace(/"/g, ''), // Remove quotes
             source: item.source,
             date: item.date || formatDate(new Date()),
             icon: item.emoji || '📰',
@@ -314,7 +327,7 @@ async function getRealNews() {
         // Fallback to static news
         const shuffled = [...STATIC_REAL_NEWS].sort(() => 0.5 - Math.random());
         return shuffled.slice(0, 3).map(item => ({
-            title: item.title,
+            title: item.title.replace(/"/g, ''), // Remove quotes
             source: item.source,
             date: formatDate(new Date()),
             icon: item.emoji,
@@ -331,6 +344,7 @@ async function getRealNews() {
 async function generateAllArticles() {
     gameState.isLoading = true;
     showLoadingState();
+    gameState.usedRealArticles.clear(); // Reset tracking for new game
 
     try {
         // Step 1: Fetch real news first
@@ -346,14 +360,14 @@ async function generateAllArticles() {
 
         console.log(`Generating: ${realCount} real, ${fakeCount} fake, ${clickbaitCount} clickbait`);
 
-        // Step 2: Generate fake news based on real articles
+        // Step 2: Generate fake news (let function pick to avoid dupes)
         const fakePromises = Array(fakeCount).fill(null).map(() => 
-            generateArticleWithGroq('false', realNews[Math.floor(Math.random() * realNews.length)])
+            generateArticleWithGroq('false')
         );
         
-        // Step 3: Generate clickbait based on real articles
+        // Step 3: Generate clickbait (let function pick to avoid dupes)
         const clickbaitPromises = Array(clickbaitCount).fill(null).map(() => 
-            generateArticleWithGroq('clickbait', realNews[Math.floor(Math.random() * realNews.length)])
+            generateArticleWithGroq('clickbait')
         );
 
         const fakeNews = await Promise.all(fakePromises);

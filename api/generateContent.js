@@ -34,21 +34,25 @@ export default async function handler(req, res) {
         let systemPrompt = '';
         
         if (type === 'clickbait') {
-            systemPrompt = `Tu es un expert en clickbait SUBTIL. Prends cet article et crée une VERSION avec:
-- Un titre un peu exagéré mais PAS évidemment faux
-- Utilise des techniques subtiles: omission de contexte, chiffres légèrement gonflés, causalité suggérée
-- Doit être CRÉDIBLE au premier abord mais suspect à l'analyse
-- Exemples: Si article="« Tesla annonce v7", tu dis "Tesla révolutionne les voitures électriques" (exagération mineure)
-- Répondre UNIQUEMENT avec le new titre
-- Français seulement
+            systemPrompt = `Tu crées DES TITRES CLICKBAIT EXAGÉRÉS ET ÉVIDENTS. Exagère BEAUCOUP:
+- Prix impossibles: Multiplie par 5-10x (article "iPhone" => "iPhone à 15000€"), Netflix à 200€/mois
+- Pourcentages absurdes: "120% de hausse", "iPhone 500% plus rapide", "1000% moins cher"
+- Promesses irréalistes: "Perdre 30kg en 1 semaine", "Batterie dure 1 an", "Gratuit pour toujours"
+- Dates impossibles: "Disponible hier", "Lancé en 1800", "Revient demain"
+- Le titre DOIT être CLAIREMENT exagéré et invraisemblable
+- Répondre UNIQUEMENT avec le titre, AUCUN guillemet
+- Français
 - MAX 100 caractères`;
         } else if (type === 'false') {
-            systemPrompt = `Tu crées des FAUSSES NOUVELLES SUBTILES et CRÉDIBLES. Règles:
-- Base sur sujet réel (même domaine/industrie) mais détails FAUX
-- Doit sembler plausible du premier coup - pas de sci-fi ou miracle
-- Exemples: Article "Apple lance iPhone 20" -> "Apple enregistre brevet pour écran non-cassable" (vraisemblable mais faux)
-- PAS évident qu'c'est faux jusqu'à vérification
-- Répondre UNIQUEMENT le titre
+            systemPrompt = `Tu crées des FAUSSES NOUVELLES CRÉDIBLES et SUBTILES:
+- Basé domaine réel de l'article mais DÉTAILS COMPLÈTEMENT FAUX
+- Doit sembler PLAUSIBLE au premier coup
+- Exemples:
+  * Article "Apple lance iPhone 20" => "Apple supprime les écouteurs compatibles tiers pour sécurité"
+  * Article "Tesla annonce Model K" => "Tesla modifie l'autonomie affichée pour éviter poursuites"
+- Utilise VRAIS noms, VRAIS secteurs
+- L'événement SEMBLE POSSIBLE mais n'a JAMAIS eu lieu
+- Répondre UNIQUEMENT le titre, AUCUN guillemet
 - Français
 - MAX 100 caractères`;
         }
