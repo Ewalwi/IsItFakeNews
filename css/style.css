@@ -1110,3 +1110,220 @@ min-width: unset;
                 opacity: 0;
             }
         }
+
+        /* Additional mobile-friendly tweaks */
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+
+            .container {
+                max-width: 100%;
+                padding: 0;
+                margin: 0 auto;
+            }
+
+            header {
+                padding: 16px 12px;
+                border-radius: 20px;
+                margin-bottom: 12px;
+            }
+
+            .score-container {
+                position: static;
+                display: flex;
+                gap: 6px;
+                margin: 10px 0;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .score-box {
+                padding: 10px 12px;
+                border-radius: 16px;
+                min-width: 100px;
+                max-width: none;
+                flex: 0 1 auto;
+                text-align: center;
+                box-shadow: 0 4px 0 #2D2D2D;
+            }
+
+            .score-label {
+                font-size: 0.75rem;
+            }
+
+            .score-value {
+                font-size: 1.5rem;
+            }
+
+            .progress-container {
+                height: 28px;
+                margin: 12px 0;
+            }
+
+            .progress-text {
+                font-size: 0.9rem;
+            }
+
+            .article-container {
+                padding: 14px;
+            }
+
+            .article-image {
+                height: 180px;
+                font-size: 4rem;
+                border-radius: 20px;
+                margin-bottom: 16px;
+            }
+
+            .article-source {
+                flex-direction: column;
+                gap: 8px;
+                font-size: 0.95rem;
+                padding: 12px 16px;
+                margin-bottom: 14px;
+            }
+
+            .article-title {
+                padding: 14px;
+                font-size: 1.15rem;
+                line-height: 1.3;
+                word-break: break-word;
+                margin-bottom: 16px;
+            }
+
+            .choice-btn, .next-btn, .share-btn, .restart-btn {
+                width: 100%;
+                padding: 16px 14px;
+                font-size: 1.05rem;
+                border-radius: 18px;
+                border: 4px solid #2D2D2D;
+                box-shadow: 0 4px 0 #2D2D2D;
+                touch-action: manipulation;
+                -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+            }
+
+            .choice-btn:active {
+                transform: translateY(2px);
+                box-shadow: 0 2px 0 #2D2D2D;
+            }
+
+            .buttons-container {
+                gap: 10px;
+            }
+
+            .content-header {
+                padding: 14px 16px;
+                font-size: 1.1rem;
+            }
+
+            .question-number {
+                font-size: 0.9rem;
+            }
+
+            .icon {
+                width: 36px;
+                height: 36px;
+                font-size: 1.5rem;
+                border: 2px solid #2D2D2D;
+            }
+
+            .blob {
+                display: none;
+            }
+
+            #toast-container {
+                left: 50%;
+                right: auto;
+                transform: translateX(-50%);
+                top: 12px;
+            }
+
+            .toast {
+                min-width: 160px;
+                max-width: calc(100vw - 24px);
+                font-size: 0.9rem;
+            }
+
+            .start-screen {
+                padding: 20px;
+            }
+
+            .start-screen .explanation {
+                font-size: 1rem;
+            }
+
+            .endgame-container {
+                padding: 20px;
+            }
+
+            .final-score {
+                font-size: 3rem;
+            }
+
+            .badge {
+                font-size: 5rem;
+            }
+
+            .badge-title {
+                font-size: 1.3rem;
+            }
+
+            .summary-boxes {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .summary-box {
+                max-width: 100%;
+                padding: 12px 14px;
+            }
+
+            .result-outcome {
+                font-size: clamp(1.5rem, 5vw, 2.5rem);
+            }
+
+            .points-awarded {
+                font-size: clamp(1.3rem, 4vw, 2rem);
+            }
+        }
+
+        @media (max-width: 360px) {
+            .article-image {
+                height: 140px;
+                font-size: 3rem;
+            }
+
+            .next-btn, .choice-btn {
+                padding: 14px 12px;
+                font-size: 1rem;
+            }
+
+            header {
+                padding: 12px 10px;
+            }
+
+            .logo {
+                font-size: clamp(1.5rem, 4vw, 2.5rem);
+            }
+
+            .article-title {
+                font-size: 1rem;
+            }
+
+            .score-box {
+                min-width: 90px;
+                padding: 8px 10px;
+            }
+
+            .score-value {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Common text wrapping for all screens */
+        .article-title {
+            word-wrap: break-word;
+            hyphens: auto;
+            overflow-wrap: break-word;
+        }
