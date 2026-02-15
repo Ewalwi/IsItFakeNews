@@ -215,55 +215,52 @@ async function generateEmojiWithGroq(title) {
     }
 }
 
-async function generateArticleWithGroq(type = 'false') {
-    const prompts = {
-        false: {
-            system: `Tu génères des TITRES de fausses nouvelles TRÈS SPÉCIFIQUES pour un jeu éducatif. Le titre DOIT contenir des ÉLÉMENTS CONCRETS : chiffres précis, noms de lieux, technologies spécifiques, ou événements datés. ÉVITE absolument les phrases vagues type 'vous n'allez pas croire', 'incroyable découverte', etc. Exemples BONS: "Un lycéen de Bordeaux invente une batterie qui se recharge en 30 secondes", "Des archéologues découvrent une pyramide de 150m sous Paris", "La SNCF teste des trains à 800 km/h sur la ligne Paris-Lyon". Réponds en JSON: {"title":"...","emoji":"..."}`,
-            user: "Génère UN SEUL titre de fausse nouvelle avec des éléments concrets et vérifiables (chiffres précis, lieux exacts, noms de villes/pays, technologies)."
-        },
-        clickbait: {
-            system: `Tu génères des TITRES clickbait TRÈS SPÉCIFIQUES pour un jeu éducatif. Le titre DOIT contenir des FAITS CONCRETS exagérés : chiffres précis, noms de marques/personnes connues, dates exactes, lieux spécifiques. ÉVITE les phrases vagues. Exemples BONS: "Google annonce la fermeture de Gmail en décembre 2026", "Le nouveau iPhone 21 coûtera 2500€ selon Tim Cook", "McDonald's remplace tous ses burgers par du tofu à partir de juin". Réponds en JSON: {"title":"...","emoji":"..."}`,
-            user: "Génère UN SEUL titre clickbait avec des éléments concrets (marques connues, prix exacts, dates précises, noms de PDG/célébrités)."
-        }
-    };
-
+async function generateArticleWithGroq(type = 'false', baseArticle = null) {
     try {
-        const content = await callGroqAPI([
-            { role: "system", content: prompts[type].system },
-            { role: "user", content: prompts[type].user }
-        ], {
-            max_tokens: 200,
-            temperature: 1.0
+        // If no base article, pick a random real one
+        if (!baseArticle && gameState.articles && gameState.articles.length > 0) {
+            const realArticles = gameState.articles.filter(a => a.type === 'true');
+            if (realArticles.length > 0) {
+                baseArticle = realArticles[Math.floor(Math.random() * realArticles.length)];
+            }
+        }
+
+        // Fallback to static if still no article
+        if (!baseArticle) {
+            return getStaticFallback(type);
+        }
+
+        // Call the new API to generate fake/clickbait based on real article
+        const response = await fetch('/api/generateContent', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                realArticle: { title: baseArticle.title },
+                type: type
+            })
         });
 
-        if (!content) {
-            console.log('Groq failed, using static fallback');
+        if (!response.ok) {
+            console.log('generateContent API failed, using static fallback');
             return getStaticFallback(type);
         }
 
-        let parsedContent;
-        try {
-            parsedContent = JSON.parse(content);
-        } catch (e) {
-            console.error('Failed to parse JSON, using static fallback');
-            return getStaticFallback(type);
-        }
-        
+        const data = await response.json();
         const date = formatDate(new Date());
         const source = type === 'false' ? 'InfoDélire' : 'BuzzActu';
         
         let explanation;
         if (type === 'false') {
-            explanation = `Cette information est complètement inventée. Aucune source fiable ne rapporte cet événement. Les chiffres et faits mentionnés sont fictifs et conçus pour sembler crédibles tout en étant absurdes ou impossibles.`;
+            explanation = `Cette information est complètement inventée basée sur le sujet réel: "${baseArticle.title}". Aucune source fiable ne rapporte cet événement.`;
         } else {
-            explanation = `Ce titre utilise des techniques de clickbait : chiffres exagérés, promesses irréalistes, ou informations sorties de leur contexte pour attirer les clics. Même s'il peut contenir une part de vérité, il déforme considérablement la réalité.`;
+            explanation = `Ce titre exagère et déforme l'article réel: "${baseArticle.title}". Technique classique de clickbait pour attirer les clics.`;
         }
 
         return {
-            title: parsedContent.title || 'Titre non généré',
+            title: data.generatedTitle || 'Titre non généré',
             source: source,
             date: date,
-            icon: parsedContent.emoji || '❓',
+            icon: '❓',
             type: type,
             explanation: explanation,
             wrongPercent: randomInt(50, 80)
@@ -289,30 +286,42 @@ function getStaticFallback(type) {
 // ========================================
 async function getRealNews() {
     try {
-        const shuffled = [...STATIC_REAL_NEWS].sort(() => 0.5 - Math.random());
-        const selected = shuffled.slice(0, 3);
+        // Fetch real news from live sources
+        const response = await fetch('/api/fetchNews');
+        if (!response.ok) throw new Error('Failed to fetch news');
         
-        const articles = await Promise.all(
-            selected.map(async (item) => {
-                const emoji = await generateEmojiWithGroq(item.title);
-                const date = formatDate(new Date());
-                
-                return {
-                    title: item.title,
-                    source: item.source,
-                    date: date,
-                    icon: emoji,
-                    type: 'true',
-                    explanation: item.explanation,
-                    wrongPercent: item.wrongPercent
-                };
-            })
-        );
+        const data = await response.json();
+        const realArticles = data.articles || [];
+
+        console.log(`Fetched ${realArticles.length} real articles from ${data.source}`);
+
+        // Take the first few for the game
+        const selected = realArticles.slice(0, 4);
+        
+        const articles = selected.map((item) => ({
+            title: item.title,
+            source: item.source,
+            date: item.date || formatDate(new Date()),
+            icon: item.emoji || '📰',
+            type: 'true',
+            explanation: item.explanation || 'Article d\'actualité vérifiée',
+            wrongPercent: 35
+        }));
 
         return articles;
     } catch (error) {
         console.error('Error getting real news:', error);
-        return [];
+        // Fallback to static news
+        const shuffled = [...STATIC_REAL_NEWS].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, 3).map(item => ({
+            title: item.title,
+            source: item.source,
+            date: formatDate(new Date()),
+            icon: item.emoji,
+            type: 'true',
+            explanation: item.explanation,
+            wrongPercent: item.wrongPercent
+        }));
     }
 }
 
@@ -324,15 +333,28 @@ async function generateAllArticles() {
     showLoadingState();
 
     try {
+        // Step 1: Fetch real news first
         const realNews = await getRealNews();
+        console.log(`Got ${realNews.length} real articles`);
+        
+        // Store real articles for reference
+        gameState.articles = [...realNews];
+        
         const realCount = realNews.length;
         const fakeCount = Math.floor((gameState.totalQuestions - realCount) / 2);
         const clickbaitCount = gameState.totalQuestions - realCount - fakeCount;
 
         console.log(`Generating: ${realCount} real, ${fakeCount} fake, ${clickbaitCount} clickbait`);
 
-        const fakePromises = Array(fakeCount).fill(null).map(() => generateArticleWithGroq('false'));
-        const clickbaitPromises = Array(clickbaitCount).fill(null).map(() => generateArticleWithGroq('clickbait'));
+        // Step 2: Generate fake news based on real articles
+        const fakePromises = Array(fakeCount).fill(null).map(() => 
+            generateArticleWithGroq('false', realNews[Math.floor(Math.random() * realNews.length)])
+        );
+        
+        // Step 3: Generate clickbait based on real articles
+        const clickbaitPromises = Array(clickbaitCount).fill(null).map(() => 
+            generateArticleWithGroq('clickbait', realNews[Math.floor(Math.random() * realNews.length)])
+        );
 
         const fakeNews = await Promise.all(fakePromises);
         const clickbaitNews = await Promise.all(clickbaitPromises);
@@ -340,6 +362,8 @@ async function generateAllArticles() {
         gameState.articles = [...realNews, ...fakeNews, ...clickbaitNews].filter(a => a !== null);
         shuffleArray(gameState.articles);
         gameState.totalQuestions = gameState.articles.length;
+
+        console.log(`Total articles ready: ${gameState.articles.length}`);
 
     } catch (error) {
         console.error('Error generating articles:', error);
@@ -413,6 +437,37 @@ function checkAnswer(playerAnswer) {
     showResult(isCorrect, article, playerAnswer);
 }
 
+function generateContextualExplanation(article, playerAnswer, isCorrect) {
+    const explanations = {
+        correct_true: `✅ C'est effectivement vrai ! Cet article provient d'une source fiable (${article.source}). ${article.explanation}`,
+        
+        correct_false: `✅ Bien joué ! Tu as repéré que c'était faux. ${article.explanation}`,
+        
+        correct_clickbait: `✅ Exact ! Ce titre utilise les techniques du clickbait. ${article.explanation}`,
+        
+        wrong_true_false: `❌ Erreur : c'est un article vrai. Bien que le titre puisse sembler exagéré, ${article.source} est une source d'actualité fiable. ${article.explanation}`,
+        
+        wrong_true_clickbait: `❌ Erreur : c'est un vrai article, pas du clickbait. La source ${article.source} publie des informations vérifiées. ${article.explanation}`,
+        
+        wrong_false_true: `❌ Erreur : c'est une fausse nouvelle. Le titre peut sembler plausible, mais aucune source fiable ne le rapporte. ${article.explanation}`,
+        
+        wrong_false_clickbait: `❌ Erreur : c'est une fausse nouvelle totale, encore pire que du simple clickbait. ${article.explanation}`,
+        
+        wrong_clickbait_true: `❌ Erreur : c'est un vrai article ! Bien que le titre soit accrocateur, ${article.source} est une source vérifiée. ${article.explanation}`,
+        
+        wrong_clickbait_false: `❌ Erreur : c'est une fausse nouvelle complète, pas du clickbait. Le titre n'est pas qu'exagéré, il est totalement inventé. ${article.explanation}`
+    };
+    
+    let key;
+    if (isCorrect) {
+        key = `correct_${article.type}`;
+    } else {
+        key = `wrong_${article.type}_${playerAnswer}`;
+    }
+    
+    return explanations[key] || article.explanation;
+}
+
 function showResult(isCorrect, article, playerAnswer) {
     const answerLabels = {
         'true': 'Vrai',
@@ -441,7 +496,8 @@ function showResult(isCorrect, article, playerAnswer) {
     DOM.accuracyInfo.textContent = `${article.wrongPercent}% se trompent`;
     
     if (DOM.explanationText) {
-        DOM.explanationText.textContent = article.explanation;
+        const contextualExplanation = generateContextualExplanation(article, playerAnswer, isCorrect);
+        DOM.explanationText.textContent = contextualExplanation;
     }
     
     showScreen('result');
