@@ -1,0 +1,11 @@
+{
+  "buildCommand": "echo 'No build needed'",
+  "devCommand": "python -m http.server 3000",
+  "public": ".",
+  "version": 2,
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
+}

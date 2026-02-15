@@ -177,14 +177,15 @@ async function callGroqAPI(messages, options = {}) {
         });
 
         if (!response.ok) {
-            console.error('Groq API error:', response.status);
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+            console.error('Groq API error:', response.status, errorData);
             return null;
         }
 
         const data = await response.json();
         return data.choices[0]?.message?.content || null;
     } catch (error) {
-        console.error('Error calling Groq API:', error);
+        console.error('Error calling Groq API:', error.message);
         return null;
     }
 }
