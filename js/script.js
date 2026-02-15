@@ -606,40 +606,63 @@ function shareScore() {
     
     if (percentage >= 90) {
         emoji = '🏆';
-        shareMessage = `${emoji} JE SUIS UN MAÎTRE DE L'INFO ! J'ai écrasé "${DOM.badgeTitle.textContent}" avec ${gameState.score}/${maxScore} au Fake News Detector ! 🎯
-
-💪 T'es capable de faire mieux ? Rejoins la bataille contre la désinformation ! 👇`;
+        shareMessage = `${emoji} JE SUIS UN MAÎTRE DE L'INFO ! J'ai écrasé "${DOM.badgeTitle.textContent}" avec ${gameState.score}/${maxScore} au Fake News Detector ! 🎯\n\n💪 T'es capable de faire mieux ? Rejoins la bataille contre la désinformation ! 👇`;
     } else if (percentage >= 70) {
         emoji = '🧠';
-        shareMessage = `${emoji} J'ai atteint "${DOM.badgeTitle.textContent}" avec ${gameState.score}/${maxScore} au Fake News Detector ! 🎯
-
-Entraîne-toi à repérer les fake news et deviens un champion ! 🚀`;
+        shareMessage = `${emoji} J'ai atteint "${DOM.badgeTitle.textContent}" avec ${gameState.score}/${maxScore} au Fake News Detector ! 🎯\n\nEntraîne-toi à repérer les fake news et deviens un champion ! 🚀`;
     } else if (percentage >= 50) {
         emoji = '🔍';
-        shareMessage = `${emoji} Regarde, j'ai ${gameState.score}/${maxScore} au Fake News Detector ! 🎯
-
-C'est un jeu DINGUE pour tester ton esprit critique ! À toi de jouer maintenant ! 💪`;
+        shareMessage = `${emoji} Regarde, j'ai ${gameState.score}/${maxScore} au Fake News Detector ! 🎯\n\nC'est un jeu DINGUE pour tester ton esprit critique ! À toi de jouer maintenant ! 💪`;
     } else {
         emoji = '😂';
-        shareMessage = `${emoji} Aïe ! J'ai seulement ${gameState.score}/${maxScore} au Fake News Detector 😅
-
-Mais c'est normal, je commence à peine ! Rejoins-moi pour qu'on apprenne ensemble à repérer les fake news ! 🎯`;
+        shareMessage = `${emoji} Aïe ! J'ai seulement ${gameState.score}/${maxScore} au Fake News Detector 😅\n\nMais c'est normal, je commence à peine ! Rejoins-moi pour qu'on apprenne ensemble à repérer les fake news ! 🎯`;
     }
     
-    const urlMessage = `
-
-🔗 JOUE MAINTENANT: ${window.location.href}`;
+    const urlMessage = `\n\n🔗 JOUE MAINTENANT: ${window.location.href}`;
     const fullMessage = shareMessage + urlMessage;
+    const shareTitle = '🔍 Fake News Detector - Teste ton esprit critique !';
     
-    if (navigator.share) {
+    // Try native shares first (WhatsApp, Twitter, etc. on mobile)
+    if (navigator.share && navigator.canShare && navigator.canShare({ text: fullMessage })) {
         navigator.share({
-            title: '🔍 Fake News Detector - Teste ton esprit critique !',
+            title: shareTitle,
             text: fullMessage,
             url: window.location.href
-        }).catch(() => copyToClipboard(fullMessage));
+        }).catch(() => showShareFallback(fullMessage));
+    } else if (navigator.share) {
+        // Try generic share
+        navigator.share({
+            title: shareTitle,
+            text: fullMessage,
+            url: window.location.href
+        }).catch(() => showShareFallback(fullMessage));
     } else {
-        copyToClipboard(fullMessage);
+        // Fallback for unsupported browsers
+        showShareFallback(fullMessage);
     }
+}
+
+function showShareFallback(message) {
+    // Create a shareable link dialog
+    const dialogContent = `
+    <div style="padding: 20px; text-align: center; font-family: 'Fredoka', cursive;">
+        <h2 style="color: #2D2D2D; margin-bottom: 15px;">📤 Partage ton score !</h2>
+        <p style="color: #666; margin-bottom: 20px;">Copie le lien ou partage sur les réseaux :</p>
+        <textarea id="share-text" readonly style="width: 100%; height: 120px; padding: 10px; border: 3px solid #2D2D2D; border-radius: 15px; font-family: monospace; font-size: 0.9rem; resize: none;">${message}</textarea>
+        <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+            <button onclick="copyShareText('share-text')" style="padding: 10px 20px; background: #6BCF7F; border: 3px solid #2D2D2D; border-radius: 15px; cursor: pointer; font-weight: 700; font-family: 'Fredoka';">📋 Copier</button>
+            <button onclick="shareVia('whatsapp', '${encodeURIComponent(message)}')" style="padding: 10px 20px; background: #25D366; color: white; border: 3px solid #2D2D2D; border-radius: 15px; cursor: pointer; font-weight: 700; font-family: 'Fredoka';">💬 WhatsApp</button>
+            <button onclick="shareVia('twitter', '${encodeURIComponent(message)}')" style="padding: 10px 20px; background: #1DA1F2; color: white; border: 3px solid #2D2D2D; border-radius: 15px; cursor: pointer; font-weight: 700; font-family: 'Fredoka';">𝕏 Twitter</button>
+        </div>
+        <button onclick="this.parentElement.parentElement.style.display='none'" style="margin-top: 15px; padding: 8px 16px; background: #FFB347; border: 3px solid #2D2D2D; border-radius: 12px; cursor: pointer; font-weight: 700; font-family: 'Fredoka';">Fermer</button>
+    </div>
+    `;
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10000;';
+    modal.innerHTML = `<div style="background:white;border-radius:20px;border:6px solid #2D2D2D;max-width:500px;width:90%;">${dialogContent}</div>`;
+    modal.onclick = (e) => e.target === modal && (modal.style.display = 'none');
+    document.body.appendChild(modal);
 }
 
 function restartGame() {
@@ -770,41 +793,96 @@ window.checkAnswer = checkAnswer;
 window.nextQuestion = nextQuestion;
 window.shareScore = shareScore;
 window.restartGame = restartGame;
+window.copyShareText = copyShareText;
+window.shareVia = shareVia;
 
 // ========================================
-// Toast/Notification UI
+// Toast/Notification UI & Helpers
 // ========================================
-// Lightweight sound feedback using Web Audio API
+function copyShareText(elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.select();
+        document.execCommand('copy');
+        showToast('✅ Copié dans le presse-papiers !', 'success');
+    }
+}
+
+function shareVia(platform, text) {
+    const decodedText = decodeURIComponent(text);
+    let url = '';
+    if (platform === 'whatsapp') {
+        url = `https://wa.me/?text=${text}`;
+    } else if (platform === 'twitter') {
+        url = `https://twitter.com/intent/tweet?text=${text}`;
+    }
+    if (url) window.open(url, '_blank');
+}
+
+// Elaborate sound effects with melodies
 let _audioCtx = null;
+
 function playSound(type = 'success') {
     try {
         if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const ctx = _audioCtx;
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.connect(g);
-        g.connect(ctx.destination);
         const now = ctx.currentTime;
-        g.gain.setValueAtTime(0.0001, now);
+        
         if (type === 'success') {
-            o.type = 'sine';
-            o.frequency.setValueAtTime(880, now);
-            g.gain.exponentialRampToValueAtTime(0.08, now + 0.001);
-            o.start(now);
-            o.frequency.exponentialRampToValueAtTime(1320, now + 0.12);
-            g.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
-            o.stop(now + 0.29);
-        } else {
-            o.type = 'sine';
-            o.frequency.setValueAtTime(220, now);
-            g.gain.exponentialRampToValueAtTime(0.09, now + 0.001);
-            o.start(now);
-            o.frequency.exponentialRampToValueAtTime(110, now + 0.12);
-            g.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
-            o.stop(now + 0.29);
+            // Victory melody: ascending notes with echo (C4-E4-G4-C5)
+            const notes = [
+                { freq: 262, duration: 0.15 },  // C4
+                { freq: 330, duration: 0.15 },  // E4
+                { freq: 392, duration: 0.15 },  // G4
+                { freq: 523, duration: 0.4 }    // C5 - held longer
+            ];
+            
+            let time = now;
+            notes.forEach((note, idx) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(note.freq, time);
+                gain.gain.setValueAtTime(0, time);
+                gain.gain.linearRampToValueAtTime(0.1, time + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + note.duration);
+                
+                osc.start(time);
+                osc.stop(time + note.duration);
+                time += note.duration + 0.05;
+            });
+        } else if (type === 'error') {
+            // Failure melody: descending notes (G4-E4-C4-A3)
+            const notes = [
+                { freq: 392, duration: 0.12 },  // G4
+                { freq: 330, duration: 0.12 },  // E4
+                { freq: 262, duration: 0.12 },  // C4
+                { freq: 220, duration: 0.4 }    // A3 - held
+            ];
+            
+            let time = now;
+            notes.forEach((note, idx) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(note.freq, time);
+                gain.gain.setValueAtTime(0, time);
+                gain.gain.linearRampToValueAtTime(0.12, time + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + note.duration);
+                
+                osc.start(time);
+                osc.stop(time + note.duration);
+                time += note.duration + 0.04;
+            });
         }
     } catch (e) {
-        // ignore if audio not allowed or fails
+        // Ignore if audio not allowed
     }
 }
 
