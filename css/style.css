@@ -80,69 +80,100 @@ header {
 }
 
 .toast {
-    min-width: 260px;
-    max-width: 350px;
-    background: #fffbe7;
+    min-width: 280px;
+    max-width: 380px;
+    background: #FFF;
     color: #2D2D2D;
-    border: 2.5px solid #FFD166;
-    border-radius: 18px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.10), 0 2px 0 #FFD166;
-    padding: 18px 28px 18px 18px;
+    border: 5px solid #FFD166;
+    border-radius: 25px;
+    box-shadow: 0 10px 0 #2D2D2D, 0 4px 24px rgba(0,0,0,0.15);
+    padding: 20px 28px;
     font-family: 'Fredoka', cursive;
-    font-size: 1.1rem;
-    font-weight: 600;
+    font-size: 1.05rem;
+    font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 16px;
     opacity: 0;
-    transform: translateY(-20px);
-    animation: toast-in 0.4s forwards, toast-out 0.4s 2.6s forwards;
+    transform: translateY(-30px) scale(0.9);
+    animation: toast-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, toast-out 0.4s ease-in 2.6s forwards;
     pointer-events: auto;
+    position: relative;
 }
 
 .toast.toast-success {
     border-color: #06D6A0;
-    background: #eafff3;
+    background: #FFF;
     color: #1b5e20;
 }
+
+.toast.toast-success .toast-icon {
+    color: #06D6A0;
+}
+
 .toast.toast-error {
     border-color: #EF476F;
-    background: #fff0f3;
+    background: #FFF;
     color: #b71c1c;
 }
+
+.toast.toast-error .toast-icon {
+    color: #EF476F;
+}
+
 .toast.toast-info {
     border-color: #118ab2;
-    background: #e6f7ff;
+    background: #FFF;
     color: #0d47a1;
 }
+
+.toast.toast-info .toast-icon {
+    color: #118ab2;
+}
+
 .toast .toast-icon {
-    font-size: 1.5em;
+    font-size: 1.8em;
     margin-right: 8px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 @keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.9);
+    }
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
     }
 }
+
 @keyframes toast-out {
     to {
         opacity: 0;
-        transform: translateY(-20px);
+        transform: translateX(400px) rotate(20deg);
     }
 }
 
 @media (max-width: 600px) {
     #toast-container {
-        right: 10px;
-        top: 10px;
+        right: 15px;
+        top: 15px;
     }
     .toast {
-        min-width: 180px;
-        max-width: 90vw;
-        font-size: 1rem;
-        padding: 12px 16px 12px 12px;
+        min-width: 200px;
+        max-width: 85vw;
+        font-size: 0.95rem;
+        padding: 14px 16px;
+        border: 4px solid;
+        border-radius: 20px;
+        box-shadow: 0 6px 0 #2D2D2D, 0 2px 16px rgba(0,0,0,0.12);
+    }
+    .toast .toast-icon {
+        font-size: 1.5em;
     }
 }
 
